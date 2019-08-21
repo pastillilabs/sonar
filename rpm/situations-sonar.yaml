@@ -1,0 +1,36 @@
+Name: situations-sonar
+Summary: Companion Daemon for Situations
+Version: 0.0.1
+Release: 1
+# The contents of the Group field should be one of the groups listed here:
+# http://gitorious.org/meego-developer-tools/spectacle/blobs/master/data/GROUPS
+Group: Qt/Qt
+URL: http://www.pastillilabs.com
+License: Copyright (C) Pastilli Labs - All Rights Reserved
+# This must be generated before uploading a package to a remote build service.
+# Usually this line does not need to be modified.
+Sources:
+- '%{name}-%{version}.tar.bz2'
+Description: |
+  Companion Daemon for Situations
+Configure: none
+Builder: qmake5
+
+# This section specifies build dependencies that are resolved using pkgconfig.
+# This is the preferred way of specifying build dependencies for your package.
+PkgConfigBR:
+  - Qt5Core
+
+# Build dependencies without a pkgconfig setup can be listed here
+# PkgBR:
+#   - package-needed-to-build
+
+# All installed files
+Files:
+  - '/lib/systemd/system/situations-sonar.service'
+  - '%{_libdir}/systemd/user/harbour-situations2application.service'
+  - '%{_bindir}/%{name}'
+
+# For more information about yaml and what's supported in Sailfish OS
+# build system, please see https://wiki.merproject.org/wiki/Spectacle
+

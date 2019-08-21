@@ -1,0 +1,9 @@
+[Unit]
+Description=Situations Companion Service
+
+[Service]
+ExecStart=/usr/bin/situations-sonar
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

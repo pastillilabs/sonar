@@ -1,0 +1,4 @@
+* Thu Aug 15 2019 Heikki Haveri <support@pastillilabs.com> 0.0.1
+- Service definition for Situations Application
+- Initial version of Sonar - a companion daemon for Situations to access privileged functionality on Sailfish OS
+
