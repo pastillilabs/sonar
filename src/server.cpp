@@ -2,14 +2,21 @@
 #include "messenger.h"
 #include <QCoreApplication>
 #include <QDebug>
+#include <QFile>
 #include <QHash>
 #include <QJsonDocument>
+#include <QList>
 #include <QLocalServer>
 #include <QLocalSocket>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 namespace {
 
 const QString SERVER_URI{QStringLiteral("com.pastillilabs.sonar")};
+const QString PROC_CMDLINE{QStringLiteral("/proc/%1/cmdline")};
+
+const QByteArray REQUIRED_CMDLINE{"/usr/bin/harbour-situations2application"};
 
 QLocalServer localServer;
 QHash<QLocalSocket*, qint64> clientBufferSizes;
@@ -44,10 +51,39 @@ void readyRead(QLocalSocket* socket)
     }
 }
 
+bool acceptConnection(QLocalSocket* socket) {
+    bool accepted(false);
+
+    // Check if connection can be accepted
+    if(socket != nullptr) {
+        ucred ucred;
+        socklen_t len = static_cast<socklen_t>(sizeof(ucred));
+        if(getsockopt(socket->socketDescriptor(), SOL_SOCKET, SO_PEERCRED, &ucred, &len) != -1) {
+            QFile processCmdlineFile(PROC_CMDLINE.arg(ucred.pid));
+            if(processCmdlineFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+                const QList<QByteArray> cmdLine(processCmdlineFile.readAll().split('\0'));
+
+                if(cmdLine.first() == REQUIRED_CMDLINE) {
+                    qInfo() << "Connection accepted";
+                    accepted = true;
+                }
+                else {
+                    qCritical() << "Connection refused: client not accepted!";
+                }
+            }
+        }
+        else {
+            qCritical() << "Connection refused: getting required client information failed!";
+        }
+    }
+
+    return accepted;
+}
+
 void newConnection()
 {
     QLocalSocket* socket(localServer.nextPendingConnection());
-    if(socket) {
+    if(acceptConnection(socket)) {
         clientBufferSizes[socket] = -1;
 
         QObject::connect(socket, &QLocalSocket::disconnected, [socket] {
@@ -64,8 +100,10 @@ void newConnection()
 
 namespace sonar {
 
-void startServer()
+bool startServer()
 {
+    bool success(false);
+
     // Make sure no multiple instances are running
     QLocalSocket socket;
     socket.connectToServer(SERVER_URI);
@@ -73,7 +111,6 @@ void startServer()
         socket.disconnectFromServer();
 
         qCritical() << "Server already running";
-        QCoreApplication::exit(1);
     }
     else {
         localServer.setSocketOptions(QLocalServer::WorldAccessOption);
@@ -87,12 +124,15 @@ void startServer()
             QLocalServer::removeServer(SERVER_URI);
         }
 
-        // Finish on unsuccessful start
-        if(!startCounter) {
+        if(startCounter) {
+            success = true;
+        }
+        else {
             qCritical() << "Unable to open local socket:" << localServer.errorString();
-            QCoreApplication::exit(1);
         }
     }
+
+    return success;
 }
 
 } // namespace sonar

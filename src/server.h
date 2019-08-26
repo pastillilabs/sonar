@@ -3,7 +3,7 @@
 
 namespace sonar {
 
-void startServer();
+bool startServer();
 
 } // namespace sonar
 
