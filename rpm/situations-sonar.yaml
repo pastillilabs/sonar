@@ -1,7 +1,7 @@
 Name: situations-sonar
 Summary: Companion Daemon for Situations
-Version: 0.0.1
-Release: 1
+Version: 0.0.2
+Release: 2
 # The contents of the Group field should be one of the groups listed here:
 # http://gitorious.org/meego-developer-tools/spectacle/blobs/master/data/GROUPS
 Group: Qt/Qt
@@ -20,6 +20,9 @@ Builder: qmake5
 # This is the preferred way of specifying build dependencies for your package.
 PkgConfigBR:
   - Qt5Core
+  - libmkcal-qt5
+  - libkcalcoren-qt5
+  - libical
 
 # Build dependencies without a pkgconfig setup can be listed here
 # PkgBR:
@@ -27,9 +30,9 @@ PkgConfigBR:
 
 # All installed files
 Files:
-  - '/lib/systemd/system/situations-sonar.service'
-  - '%{_libdir}/systemd/user/harbour-situations2application.service'
   - '%{_bindir}/%{name}'
+  - '%{_libdir}/systemd/user/harbour-situations2application.service'
+  - '%{_sysconfdir}/systemd/system/situations-sonar.service'
 
 # For more information about yaml and what's supported in Sailfish OS
 # build system, please see https://wiki.merproject.org/wiki/Spectacle

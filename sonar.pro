@@ -4,8 +4,12 @@ VERSION = 0.0.1
 QT -= gui
 QT += dbus network
 
-CONFIG += c++11 console
+CONFIG += c++11 console link_pkgconfig
 CONFIG -= app_bundle
+
+PKGCONFIG += libical
+PKGCONFIG += libkcalcoren-qt5
+PKGCONFIG += libmkcal-qt5
 
 DEFINES += QT_NO_CAST_FROM_ASCII
 DEFINES += QT_NO_CAST_TO_ASCII
@@ -13,19 +17,22 @@ DEFINES += QT_NO_FOREACH
 DEFINES += QT_NO_NARROWING_CONVERSIONS_IN_CONNECT
 
 INCLUDEPATH += $$PWD/src
+INCLUDEPATH += /usr/include/kcalcoren-qt5
+INCLUDEPATH += /usr/include/mkcal-qt5
 
 HEADERS += \
-    src/messenger.h \
+    src/client.h \
     src/platform.h \
     src/server.h \
-    src/request/set.h
+    src/types.h \
+    src/observers/calendar.h
 
 SOURCES += \
     src/main.cpp \
-    src/messenger.cpp \
+    src/client.cpp \
     src/platform.cpp \
     src/server.cpp \
-    src/request/set.cpp
+    src/observers/calendar.cpp
 
 DISTFILES += \
     rpm/situations-sonar.changes \

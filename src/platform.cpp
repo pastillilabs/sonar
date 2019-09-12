@@ -1,9 +1,14 @@
 #include "platform.h"
+#include "observers/calendar.h"
 
 #include <QDebug>
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusReply>
+
+#include <mkcal-qt5/extendedcalendar.h>
+#include <mkcal-qt5/extendedstorage.h>
+#include <mkcal-qt5/extendedstorageobserver.h>
 
 namespace {
 
@@ -33,12 +38,97 @@ const QString ARG_POWERED(QStringLiteral("Powered"));
 const QString ARG_ORG_BLUEZ_ADAPTER1(QStringLiteral("org.bluez.Adapter1"));
 const QString ARG_TECHNOLOGYPREFERENCE(QStringLiteral("TechnologyPreference"));
 
+const QString START_DATE(QStringLiteral("startDate"));
+const QString END_DATE(QStringLiteral("endDate"));
+
 } // namespace
 
 namespace sonar {
 namespace platform {
 
-void setBluetoothState(const QVariant& value)
+QVariant getCalendars(const QVariant& /*payload*/)
+{
+    mKCal::ExtendedCalendar::Ptr calendar(new mKCal::ExtendedCalendar(KDateTime::Spec::LocalZone()));
+    mKCal::ExtendedStorage::Ptr storage(mKCal::ExtendedCalendar::defaultStorage(calendar));
+    storage->open();
+
+    QVariantList calendars;
+    const mKCal::Notebook::List notebooks = storage->notebooks();
+    for(const mKCal::Notebook::Ptr& notebook : notebooks) {
+        const QVariantMap calendar{
+            { QStringLiteral("id"), notebook->uid() },
+            { QStringLiteral("name"), notebook->name() }
+        };
+        calendars.append(calendar);
+    }
+
+    storage->close();
+    calendar->close();
+
+    return calendars;
+}
+
+QVariant getCalendarEvents(const QVariant& payload)
+{
+    const QVariantMap request(payload.toMap());
+    const QDate startDate(QDate::fromString(request.value(START_DATE, QDate::currentDate().addDays(-1)).toString(), Qt::ISODate));
+    const QDate endDate(QDate::fromString(request.value(END_DATE, QDate::currentDate().addDays(1)).toString(), Qt::ISODate));
+
+    mKCal::ExtendedCalendar::Ptr calendar(new mKCal::ExtendedCalendar(KDateTime::Spec::LocalZone()));
+    mKCal::ExtendedStorage::Ptr storage(mKCal::ExtendedCalendar::defaultStorage(calendar));
+    storage->open();
+    storage->load(startDate, endDate);
+    storage->loadRecurringIncidences();
+
+    KCalCore::Incidence::List incidences = calendar->incidences(startDate, endDate);
+    const mKCal::ExtendedCalendar::ExpandedIncidenceList incidenceList = calendar->expandRecurrences(&incidences, KDateTime(startDate), KDateTime(endDate));
+
+    QVariantList calendarEvents;
+    for(const mKCal::ExtendedCalendar::ExpandedIncidence& expandedIncident : incidenceList) {
+        const mKCal::ExtendedCalendar::ExpandedIncidenceValidity& incidenceValidity = expandedIncident.first;
+        KCalCore::Incidence::Ptr incidence = expandedIncident.second;
+
+        if(incidence->type() == KCalCore::IncidenceBase::TypeEvent) {
+            const QString calendarUid(calendar->notebook(incidence));
+            mKCal::Notebook::Ptr notebook = storage->notebook(calendarUid);
+
+            if(!notebook || !notebook->isVisible() || !notebook->eventsAllowed()) {
+                continue;
+            }
+
+            const QVariantMap event{
+                { QStringLiteral("calendarId"), calendarUid },
+                { QStringLiteral("begin"), QString::number(incidenceValidity.dtStart.toMSecsSinceEpoch()) },
+                { QStringLiteral("end"), QString::number(incidenceValidity.dtEnd.toMSecsSinceEpoch()) },
+                { QStringLiteral("title"), incidence->summary() },
+                { QStringLiteral("description"), incidence->description() },
+                { QStringLiteral("eventLocation"), incidence->location() },
+                { QStringLiteral("hasAlarm"), incidence->hasEnabledAlarms() },
+                { QStringLiteral("rrule"), incidence->recurs() ? QStringLiteral("RRULE") : QString() },
+                { QStringLiteral("allDay"), incidence->allDay() },
+                { QStringLiteral("availability"), static_cast<int>(incidence->status()) }
+            };
+            calendarEvents.append(event);
+        }
+    }
+
+    storage->close();
+    calendar->close();
+
+    return calendarEvents;
+}
+
+void registerCalendarChangeObserver(const QVariant& payload, QLocalSocket& client, Notifier notifier)
+{
+    observers::calendar::registerChangeObserver(payload, client, notifier);
+}
+
+void unregisterCalendarChangeObserver(QLocalSocket& client)
+{
+    observers::calendar::unregisterChangeObserver(client);
+}
+
+void setBluetoothState(const QVariant& payload)
 {
     // TODO: Any better way to know which interface to use??
     QDBusInterface dbusInterface(SERVICE_ORG_BLUEZ,
@@ -52,7 +142,7 @@ void setBluetoothState(const QVariant& value)
         dbusInterface.call(METHOD_SET,
                            ARG_ORG_BLUEZ_ADAPTER1,
                            ARG_POWERED,
-                           QVariant::fromValue(QDBusVariant(value)));
+                           QVariant::fromValue(QDBusVariant(payload)));
     }
     else {
         QDBusInterface dbusInterfaceOld(SERVICE_NET_CONNMAN,
@@ -61,11 +151,11 @@ void setBluetoothState(const QVariant& value)
                                         QDBusConnection::systemBus());
         dbusInterfaceOld.call(METHOD_SETPROPERTY,
                               ARG_POWERED,
-                              QVariant::fromValue(QDBusVariant(value)));
+                              QVariant::fromValue(QDBusVariant(payload)));
     }
 }
 
-void setWifiState(const QVariant& value)
+void setWifiState(const QVariant& payload)
 {
     QDBusInterface dbusInterface(SERVICE_NET_CONNMAN,
                                  PATH_NET_CONNMAN_TECHNOLOGY_WIFI,
@@ -73,10 +163,10 @@ void setWifiState(const QVariant& value)
                                  QDBusConnection::systemBus());
     dbusInterface.call(METHOD_SETPROPERTY,
                        ARG_POWERED,
-                       QVariant::fromValue(QDBusVariant(value)));
+                       QVariant::fromValue(QDBusVariant(payload)));
 }
 
-void setCellularState(const QVariant& value)
+void setCellularState(const QVariant& payload)
 {
     QDBusInterface dbusInterface(SERVICE_NET_CONNMAN,
                                  PATH_NET_CONNMAN_TECHNOLOGY_CELLULAR,
@@ -84,10 +174,10 @@ void setCellularState(const QVariant& value)
                                  QDBusConnection::systemBus());
     dbusInterface.call(METHOD_SETPROPERTY,
                        ARG_POWERED,
-                       QVariant::fromValue(QDBusVariant(value)));
+                       QVariant::fromValue(QDBusVariant(payload)));
 }
 
-void setCellularRadioTechnology(const QVariant& value)
+void setCellularRadioTechnology(const QVariant& payload)
 {
     QDBusInterface dbusInterface(SERVICE_ORG_OFONO,
                                  PATH_RIL_0,
@@ -95,17 +185,17 @@ void setCellularRadioTechnology(const QVariant& value)
                                  QDBusConnection::systemBus());
     dbusInterface.call(METHOD_SETPROPERTY,
                        ARG_TECHNOLOGYPREFERENCE,
-                       QVariant::fromValue(QDBusVariant(value)));
+                       QVariant::fromValue(QDBusVariant(payload)));
 }
 
-void setFlightmodeState(const QVariant& value)
+void setFlightmodeState(const QVariant& payload)
 {
     QDBusInterface dbusInterface(SERVICE_COM_NOKIA_MCE,
                                  PATH_COM_NOKIA_MCE_REQUEST,
                                  INTERFACE_COM_NOKIA_MCE_REQUEST,
                                  QDBusConnection::systemBus());
     dbusInterface.call(METHOD_REQ_RADIO_STATES_CHANGE,
-                       static_cast<quint32>(value.toBool() ? 0 : 1),
+                       static_cast<quint32>(payload.toBool() ? 0 : 1),
                        static_cast<quint32>(1));
 }
 

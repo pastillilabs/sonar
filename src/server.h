@@ -1,10 +1,9 @@
-#ifndef SERVER_H
-#define SERVER_H
+#pragma once
 
 namespace sonar {
+namespace server {
 
-bool startServer();
+bool start();
 
+} // namespace server
 } // namespace sonar
-
-#endif // SERVER_H

@@ -9,18 +9,17 @@ Name:       situations-sonar
 # << macros
 
 Summary:    Companion Daemon for Situations
-Version:    0.0.1
-Release:    1
+Version:    0.0.2
+Release:    2
 Group:      Qt/Qt
 License:    Copyright (C) Pastilli Labs - All Rights Reserved
 URL:        http://www.pastillilabs.com
 Source0:    %{name}-%{version}.tar.bz2
 Source100:  situations-sonar.yaml
-Requires:   systemd
-Requires(preun): systemd
-Requires(post): systemd
-Requires(postun): systemd
 BuildRequires:  pkgconfig(Qt5Core)
+BuildRequires:  pkgconfig(libmkcal-qt5)
+BuildRequires:  pkgconfig(libkcalcoren-qt5)
+BuildRequires:  pkgconfig(libical)
 
 %description
 Companion Daemon for Situations
@@ -53,21 +52,27 @@ rm -rf %{buildroot}
 # << install post
 
 %preun
+# >> preun
 systemctl disable situations-sonar
 systemctl stop situations-sonar
+# << preun
 
 %post
+# >> post
 systemctl enable situations-sonar
 systemctl restart situations-sonar
 systemctl daemon-reload
+# << post
 
 %postun
+# >> postun
 systemctl daemon-reload
+# << postun
 
 %files
 %defattr(-,root,root,-)
-/etc/systemd/system/situations-sonar.service
-%{_libdir}/systemd/user/harbour-situations2application.service
 %{_bindir}/%{name}
+%{_libdir}/systemd/user/harbour-situations2application.service
+%{_sysconfdir}/systemd/system/situations-sonar.service
 # >> files
 # << files

@@ -1,18 +1,21 @@
-#ifndef PLATFORM_H
-#define PLATFORM_H
+#pragma once
 
-#include <QObject>
+#include "types.h"
 
 namespace sonar {
 namespace platform {
 
-void setBluetoothState(const QVariant& value);
-void setWifiState(const QVariant& value);
-void setCellularState(const QVariant& value);
-void setCellularRadioTechnology(const QVariant& value);
-void setFlightmodeState(const QVariant& value);
+QVariant getCalendars(const QVariant& payload);
+QVariant getCalendarEvents(const QVariant& payload);
+
+void registerCalendarChangeObserver(const QVariant& payload, QLocalSocket& client, Notifier notifier);
+void unregisterCalendarChangeObserver(QLocalSocket& client);
+
+void setBluetoothState(const QVariant& payload);
+void setWifiState(const QVariant& payload);
+void setCellularState(const QVariant& payload);
+void setCellularRadioTechnology(const QVariant& payload);
+void setFlightmodeState(const QVariant& payload);
 
 } // namespace platform
 } // namespace sonar
-
-#endif // PLATFORM_H

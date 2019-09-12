@@ -1,6 +1,6 @@
 #include "server.h"
-#include "messenger.h"
-#include <QCoreApplication>
+#include "client.h"
+
 #include <QDebug>
 #include <QFile>
 #include <QHash>
@@ -8,6 +8,7 @@
 #include <QList>
 #include <QLocalServer>
 #include <QLocalSocket>
+
 #include <sys/socket.h>
 #include <sys/types.h>
 
@@ -15,7 +16,6 @@ namespace {
 
 const QString SERVER_URI{QStringLiteral("com.pastillilabs.sonar")};
 const QString PROC_CMDLINE{QStringLiteral("/proc/%1/cmdline")};
-
 const QByteArray REQUIRED_CMDLINE{"/usr/bin/harbour-situations2application"};
 
 QLocalServer localServer;
@@ -25,6 +25,8 @@ void disconnected(QLocalSocket* socket)
 {
     clientBufferSizes.take(socket);
     socket->deleteLater();
+
+    qInfo() << "Connection closed";
 }
 
 void readyRead(QLocalSocket* socket)
@@ -46,7 +48,7 @@ void readyRead(QLocalSocket* socket)
             clientBufferSizes[socket] = -1;
 
             const QVariantMap map(QJsonDocument::fromJson(buffer).toVariant().toMap());
-            sonar::receive(map, *socket);
+            sonar::client::receive(map, *socket);
         }
     }
 }
@@ -99,8 +101,9 @@ void newConnection()
 } // namespace
 
 namespace sonar {
+namespace server {
 
-bool startServer()
+bool start()
 {
     bool success(false);
 
@@ -135,4 +138,5 @@ bool startServer()
     return success;
 }
 
+} // namespace server
 } // namespace sonar
