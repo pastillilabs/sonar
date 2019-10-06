@@ -23,12 +23,15 @@ const QString NOTIFY(QStringLiteral("notify"));
 // Targets
 const QString CALENDARS{QStringLiteral("calendars")};
 const QString CALENDAR_EVENTS{QStringLiteral("calendarEvents")};
-const QString CALENDAR_CHANGE{QStringLiteral("calendarChange")};
+const QString SUPPORTED_PERMISSIONS{QStringLiteral("supportedPermissions")};
+
 const QString BLUETOOTH_STATE{QStringLiteral("bluetoothState")};
-const QString WIFI_STATE{QStringLiteral("wifiState")};
 const QString CELLULAR_STATE{QStringLiteral("cellularState")};
 const QString CELLULAR_RADIO_TECHNOLOGY{QStringLiteral("cellularRadioTechnology")};
 const QString FLIGHTMODE_STATE{QStringLiteral("flightmodeState")};
+const QString WIFI_STATE{QStringLiteral("wifiState")};
+
+const QString CALENDAR_CHANGE{QStringLiteral("calendarChange")};
 
 // Calendar changed notifier
 const sonar::Notifier calendarChangeNotifier = [](QLocalSocket& client, const QVariant& payload) {
@@ -44,16 +47,17 @@ const sonar::Notifier calendarChangeNotifier = [](QLocalSocket& client, const QV
 // Get handlers
 const QHash<QString, sonar::GetHandler> GET_HANDLERS{
     { CALENDARS, sonar::platform::getCalendars },
-    { CALENDAR_EVENTS, sonar::platform::getCalendarEvents }
+    { CALENDAR_EVENTS, sonar::platform::getCalendarEvents },
+    { SUPPORTED_PERMISSIONS, sonar::platform::getSupportedPermissions }
 };
 
 // Set handlers
 const QHash<QString, sonar::SetHandler> SET_HANDLERS{
     { BLUETOOTH_STATE, sonar::platform::setBluetoothState },
-    { WIFI_STATE, sonar::platform::setWifiState },
     { CELLULAR_STATE, sonar::platform::setCellularState },
     { CELLULAR_RADIO_TECHNOLOGY, sonar::platform::setCellularRadioTechnology },
-    { FLIGHTMODE_STATE, sonar::platform::setFlightmodeState }
+    { FLIGHTMODE_STATE, sonar::platform::setFlightmodeState },
+    { WIFI_STATE, sonar::platform::setWifiState }
 };
 
 // Register handlers

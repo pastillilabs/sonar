@@ -1,5 +1,5 @@
 TARGET = situations-sonar
-VERSION = 0.0.1
+VERSION = 0.0.3
 
 QT -= gui
 QT += dbus network

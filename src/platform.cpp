@@ -56,8 +56,8 @@ QVariant getCalendars(const QVariant& /*payload*/)
     const mKCal::Notebook::List notebooks = storage->notebooks();
     for(const mKCal::Notebook::Ptr& notebook : notebooks) {
         const QVariantMap calendar{
-            { QStringLiteral("id"), notebook->uid() },
-            { QStringLiteral("name"), notebook->name() }
+            { QStringLiteral("name"), notebook->name() },
+            { QStringLiteral("uid"), notebook->uid() }
         };
         calendars.append(calendar);
     }
@@ -116,6 +116,17 @@ QVariant getCalendarEvents(const QVariant& payload)
     calendar->close();
 
     return calendarEvents;
+}
+
+QVariant getSupportedPermissions(const QVariant& /*payload*/)
+{
+    return QVariantList{
+        QStringLiteral("sonar.permission.BLUETOOTH_STATE"),
+        QStringLiteral("sonar.permission.CALENDAR"),
+        QStringLiteral("sonar.permission.FLIGHTMODE_STATE"),
+        QStringLiteral("sonar.permission.MOBILE_NETWORK_STATE"),
+        QStringLiteral("sonar.permission.WIFI_STATE"),
+    };
 }
 
 void registerCalendarChangeObserver(const QVariant& payload, QLocalSocket& client, Notifier notifier)

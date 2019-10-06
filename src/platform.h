@@ -7,6 +7,7 @@ namespace platform {
 
 QVariant getCalendars(const QVariant& payload);
 QVariant getCalendarEvents(const QVariant& payload);
+QVariant getSupportedPermissions(const QVariant& payload);
 
 void registerCalendarChangeObserver(const QVariant& payload, QLocalSocket& client, Notifier notifier);
 void unregisterCalendarChangeObserver(QLocalSocket& client);

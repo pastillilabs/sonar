@@ -1,3 +1,7 @@
+* Sun Oct 6 2019 Heikki Haveri <support@pastillilabs.com> 0.0.3
+- Added list of supported permissions (features)
+- Other useless house keeping
+
 * Thu Sep 12 2019 Heikki Haveri <support@pastillilabs.com> 0.0.2
 - Added basic "security" by client filtering (only situations binary accepted as a client)
 - Added calendar support
