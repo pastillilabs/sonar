@@ -12,5 +12,6 @@ using GetHandler = std::function<QVariant(const QVariant&)>;
 using SetHandler = std::function<void(const QVariant&)>;
 using RegisterHandler = std::function<void(const QVariant&, QLocalSocket&, Notifier)>;
 using UnregisterHandler = std::function<void(QLocalSocket&)>;
+using CommandHandler = std::function<void(const QVariant&)>;
 
 } // namespace sonar

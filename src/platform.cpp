@@ -2,6 +2,7 @@
 #include "observers/calendar.h"
 
 #include <QDebug>
+#include <QProcess>
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusReply>
@@ -208,6 +209,11 @@ void setFlightmodeState(const QVariant& payload)
     dbusInterface.call(METHOD_REQ_RADIO_STATES_CHANGE,
                        static_cast<quint32>(payload.toBool() ? 0 : 1),
                        static_cast<quint32>(1));
+}
+
+void commandUninstall(const QVariant& /*payload*/)
+{
+    QProcess::startDetached(QStringLiteral("rpm"), QStringList{QStringLiteral("-e"), QStringLiteral("situations-sonar")});
 }
 
 } // namespace platform

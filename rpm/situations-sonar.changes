@@ -1,5 +1,6 @@
-* Sun Oct 6 2019 Heikki Haveri <support@pastillilabs.com> 0.0.3
+* Fri Oct 18 2019 Heikki Haveri <support@pastillilabs.com> 0.0.3
 - Added list of supported permissions (features)
+- Added support for uninstalling Sonar
 - Other useless house keeping
 
 * Thu Sep 12 2019 Heikki Haveri <support@pastillilabs.com> 0.0.2

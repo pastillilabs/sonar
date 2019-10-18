@@ -16,6 +16,7 @@ const QString GET(QStringLiteral("get"));
 const QString SET(QStringLiteral("set"));
 const QString REGISTER(QStringLiteral("register"));
 const QString UNREGISTER(QStringLiteral("unregister"));
+const QString COMMAND(QStringLiteral("command"));
 
 const QString RETURN(QStringLiteral("return"));
 const QString NOTIFY(QStringLiteral("notify"));
@@ -32,6 +33,8 @@ const QString FLIGHTMODE_STATE{QStringLiteral("flightmodeState")};
 const QString WIFI_STATE{QStringLiteral("wifiState")};
 
 const QString CALENDAR_CHANGE{QStringLiteral("calendarChange")};
+
+const QString UNINSTALL{QStringLiteral("uninstall")};
 
 // Calendar changed notifier
 const sonar::Notifier calendarChangeNotifier = [](QLocalSocket& client, const QVariant& payload) {
@@ -68,6 +71,11 @@ const QHash<QString, sonar::RegisterHandler> REGISTER_HANDLERS{
 // Unregister handlers
 const QHash<QString, sonar::UnregisterHandler> UNREGISTER_HANDLERS{
     { CALENDAR_CHANGE, sonar::platform::unregisterCalendarChangeObserver }
+};
+
+// Command handlers
+const QHash<QString, sonar::CommandHandler> COMMAND_HANDLERS{
+    { UNINSTALL, sonar::platform::commandUninstall }
 };
 
 // Notifiers
@@ -135,6 +143,18 @@ void handleUnregister(const QVariantMap& message, QLocalSocket& from)
     handler(from);
 }
 
+void handleCommand(const QVariantMap& message)
+{
+    const QString target(message.value(TARGET).toString());
+
+    const sonar::CommandHandler defaultHandler = [target](const QVariant&) {
+        qWarning() << "No command handler for" << target;
+    };
+
+    const sonar::CommandHandler handler = COMMAND_HANDLERS.value(target, defaultHandler);
+    handler(message.value(PAYLOAD));
+}
+
 } // namespace
 
 namespace sonar {
@@ -155,6 +175,9 @@ void receive(const QVariantMap& message, QLocalSocket& from)
     }
     else if(method == UNREGISTER) {
         handleUnregister(message, from);
+    }
+    else if(method == COMMAND) {
+        handleCommand(message);
     }
     else {
         qWarning() << "Unknown method" << method;
