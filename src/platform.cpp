@@ -36,6 +36,7 @@ const QString METHOD_SETPROPERTY(QStringLiteral("SetProperty"));
 const QString METHOD_REQ_RADIO_STATES_CHANGE(QStringLiteral("req_radio_states_change"));
 
 const QString ARG_POWERED(QStringLiteral("Powered"));
+const QString ARG_TETHERING(QStringLiteral("Tethering"));
 const QString ARG_ORG_BLUEZ_ADAPTER1(QStringLiteral("org.bluez.Adapter1"));
 const QString ARG_TECHNOLOGYPREFERENCE(QStringLiteral("TechnologyPreference"));
 
@@ -127,6 +128,7 @@ QVariant getSupportedPermissions(const QVariant& /*payload*/)
         QStringLiteral("sonar.permission.FLIGHTMODE_STATE"),
         QStringLiteral("sonar.permission.MOBILE_NETWORK_STATE"),
         QStringLiteral("sonar.permission.WIFI_STATE"),
+        QStringLiteral("sonar.permission.WIFI_TETHERING")
     };
 }
 
@@ -209,6 +211,17 @@ void setFlightmodeState(const QVariant& payload)
     dbusInterface.call(METHOD_REQ_RADIO_STATES_CHANGE,
                        static_cast<quint32>(payload.toBool() ? 0 : 1),
                        static_cast<quint32>(1));
+}
+
+void setWifiTethering(const QVariant& payload)
+{
+    QDBusInterface dbusInterface(SERVICE_NET_CONNMAN,
+                                 PATH_NET_CONNMAN_TECHNOLOGY_WIFI,
+                                 INTERFACE_NET_CONNMAN_TECHNOLOGY,
+                                 QDBusConnection::systemBus());
+    dbusInterface.call(METHOD_SETPROPERTY,
+                       ARG_TETHERING,
+                       QVariant::fromValue(QDBusVariant(payload)));
 }
 
 void commandUninstall(const QVariant& /*payload*/)

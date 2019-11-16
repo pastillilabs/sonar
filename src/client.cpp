@@ -31,6 +31,7 @@ const QString CELLULAR_STATE{QStringLiteral("cellularState")};
 const QString CELLULAR_RADIO_TECHNOLOGY{QStringLiteral("cellularRadioTechnology")};
 const QString FLIGHTMODE_STATE{QStringLiteral("flightmodeState")};
 const QString WIFI_STATE{QStringLiteral("wifiState")};
+const QString WIFI_TETHERING{QStringLiteral("wifiTethering")};
 
 const QString CALENDAR_CHANGE{QStringLiteral("calendarChange")};
 
@@ -60,7 +61,8 @@ const QHash<QString, sonar::SetHandler> SET_HANDLERS{
     { CELLULAR_STATE, sonar::platform::setCellularState },
     { CELLULAR_RADIO_TECHNOLOGY, sonar::platform::setCellularRadioTechnology },
     { FLIGHTMODE_STATE, sonar::platform::setFlightmodeState },
-    { WIFI_STATE, sonar::platform::setWifiState }
+    { WIFI_STATE, sonar::platform::setWifiState },
+    { WIFI_TETHERING, sonar::platform::setWifiTethering }
 };
 
 // Register handlers

@@ -17,6 +17,7 @@ void setWifiState(const QVariant& payload);
 void setCellularState(const QVariant& payload);
 void setCellularRadioTechnology(const QVariant& payload);
 void setFlightmodeState(const QVariant& payload);
+void setWifiTethering(const QVariant& payload);
 
 void commandUninstall(const QVariant& payload);
 

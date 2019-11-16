@@ -9,8 +9,8 @@ Name:       situations-sonar
 # << macros
 
 Summary:    Companion Daemon for Situations
-Version:    0.0.3
-Release:    3
+Version:    0.0.4
+Release:    4
 Group:      Qt/Qt
 License:    Copyright (C) Pastilli Labs - All Rights Reserved
 URL:        http://www.pastillilabs.com
