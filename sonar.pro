@@ -1,15 +1,18 @@
 TARGET = situations-sonar
-VERSION = 0.0.3
+VERSION = 0.0.5
 
 QT -= gui
 QT += dbus network
 
-CONFIG += c++11 console link_pkgconfig
 CONFIG -= app_bundle
+CONFIG += c++11
+CONFIG += console
+CONFIG += link_pkgconfig
 
 PKGCONFIG += libical
 PKGCONFIG += libkcalcoren-qt5
 PKGCONFIG += libmkcal-qt5
+PKGCONFIG += Qt5Contacts
 
 DEFINES += QT_NO_CAST_FROM_ASCII
 DEFINES += QT_NO_CAST_TO_ASCII

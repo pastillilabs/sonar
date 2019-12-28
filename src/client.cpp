@@ -24,6 +24,7 @@ const QString NOTIFY(QStringLiteral("notify"));
 // Targets
 const QString CALENDARS{QStringLiteral("calendars")};
 const QString CALENDAR_EVENTS{QStringLiteral("calendarEvents")};
+const QString CONTACTS{QStringLiteral("contacts")};
 const QString SUPPORTED_PERMISSIONS{QStringLiteral("supportedPermissions")};
 
 const QString BLUETOOTH_STATE{QStringLiteral("bluetoothState")};
@@ -35,6 +36,7 @@ const QString WIFI_TETHERING{QStringLiteral("wifiTethering")};
 
 const QString CALENDAR_CHANGE{QStringLiteral("calendarChange")};
 
+const QString SEND_SMS{QStringLiteral("send_sms")};
 const QString UNINSTALL{QStringLiteral("uninstall")};
 
 // Calendar changed notifier
@@ -52,6 +54,7 @@ const sonar::Notifier calendarChangeNotifier = [](QLocalSocket& client, const QV
 const QHash<QString, sonar::GetHandler> GET_HANDLERS{
     { CALENDARS, sonar::platform::getCalendars },
     { CALENDAR_EVENTS, sonar::platform::getCalendarEvents },
+    { CONTACTS, sonar::platform::getContacts },
     { SUPPORTED_PERMISSIONS, sonar::platform::getSupportedPermissions }
 };
 
@@ -77,6 +80,7 @@ const QHash<QString, sonar::UnregisterHandler> UNREGISTER_HANDLERS{
 
 // Command handlers
 const QHash<QString, sonar::CommandHandler> COMMAND_HANDLERS{
+    { SEND_SMS, sonar::platform::commandSendSms },
     { UNINSTALL, sonar::platform::commandUninstall }
 };
 

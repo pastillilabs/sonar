@@ -1,3 +1,6 @@
+* Sat Dec 28 2019 Heikki Haveri <support@pastillilabs.com> 0.0.5
+- Added support for fetching contacts & sending SMS
+
 * Sat Nov 2 2019 Heikki Haveri <support@pastillilabs.com> 0.0.4
 - Added wifi tethering support
 

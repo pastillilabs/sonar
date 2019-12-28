@@ -3,6 +3,11 @@
 
 #include <QDebug>
 #include <QProcess>
+#include <QtContacts/QContact>
+#include <QtContacts/QContactDetail>
+#include <QtContacts/QContactManager>
+#include <QtContacts/QContactName>
+#include <QtContacts/QContactPhoneNumber>
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusReply>
@@ -13,35 +18,39 @@
 
 namespace {
 
-const QString SERVICE_ORG_BLUEZ(QStringLiteral("org.bluez"));
-const QString SERVICE_NET_CONNMAN(QStringLiteral("net.connman"));
-const QString SERVICE_ORG_OFONO(QStringLiteral("org.ofono"));
+const QString CONTACT_MANAGER_NAME(QStringLiteral("org.nemomobile.contacts.sqlite"));
+
 const QString SERVICE_COM_NOKIA_MCE(QStringLiteral("com.nokia.mce"));
+const QString SERVICE_NET_CONNMAN(QStringLiteral("net.connman"));
+const QString SERVICE_ORG_BLUEZ(QStringLiteral("org.bluez"));
+const QString SERVICE_ORG_OFONO(QStringLiteral("org.ofono"));
 
-const QString PATH_ORG_BLUEZ_HCI0(QStringLiteral("/org/bluez/hci0"));
-const QString PATH_NET_CONNMAN_TECHNOLOGY_BLUETOOTH(QStringLiteral("/net/connman/technology/bluetooth"));
-const QString PATH_NET_CONNMAN_TECHNOLOGY_WIFI(QStringLiteral("/net/connman/technology/wifi"));
-const QString PATH_NET_CONNMAN_TECHNOLOGY_CELLULAR(QStringLiteral("/net/connman/technology/cellular"));
-const QString PATH_RIL_0(QStringLiteral("/ril_0"));
 const QString PATH_COM_NOKIA_MCE_REQUEST(QStringLiteral("/com/nokia/mce/request"));
+const QString PATH_NET_CONNMAN_TECHNOLOGY_BLUETOOTH(QStringLiteral("/net/connman/technology/bluetooth"));
+const QString PATH_NET_CONNMAN_TECHNOLOGY_CELLULAR(QStringLiteral("/net/connman/technology/cellular"));
+const QString PATH_NET_CONNMAN_TECHNOLOGY_WIFI(QStringLiteral("/net/connman/technology/wifi"));
+const QString PATH_ORG_BLUEZ_HCI0(QStringLiteral("/org/bluez/hci0"));
+const QString PATH_RIL_0(QStringLiteral("/ril_0"));
 
-const QString INTERFACE_ORG_FREEDESKTOP_DBUS_PROPERTIES(QStringLiteral("org.freedesktop.DBus.Properties"));
-const QString INTERFACE_NET_CONNMAN_TECHNOLOGY(QStringLiteral("net.connman.Technology"));
-const QString INTERFACE_ORG_OFONO_RADIOSETTINGS(QStringLiteral("org.ofono.RadioSettings"));
 const QString INTERFACE_COM_NOKIA_MCE_REQUEST(QStringLiteral("com.nokia.mce.request"));
+const QString INTERFACE_NET_CONNMAN_TECHNOLOGY(QStringLiteral("net.connman.Technology"));
+const QString INTERFACE_ORG_FREEDESKTOP_DBUS_PROPERTIES(QStringLiteral("org.freedesktop.DBus.Properties"));
+const QString INTERFACE_ORG_OFONO_MESSAGEMANAGER(QStringLiteral("org.ofono.MessageManager"));
+const QString INTERFACE_ORG_OFONO_RADIOSETTINGS(QStringLiteral("org.ofono.RadioSettings"));
 
 const QString METHOD_GET(QStringLiteral("Get"));
+const QString METHOD_REQ_RADIO_STATES_CHANGE(QStringLiteral("req_radio_states_change"));
+const QString METHOD_SENDMESSAGE(QStringLiteral("SendMessage"));
 const QString METHOD_SET(QStringLiteral("Set"));
 const QString METHOD_SETPROPERTY(QStringLiteral("SetProperty"));
-const QString METHOD_REQ_RADIO_STATES_CHANGE(QStringLiteral("req_radio_states_change"));
 
-const QString ARG_POWERED(QStringLiteral("Powered"));
-const QString ARG_TETHERING(QStringLiteral("Tethering"));
 const QString ARG_ORG_BLUEZ_ADAPTER1(QStringLiteral("org.bluez.Adapter1"));
+const QString ARG_POWERED(QStringLiteral("Powered"));
 const QString ARG_TECHNOLOGYPREFERENCE(QStringLiteral("TechnologyPreference"));
+const QString ARG_TETHERING(QStringLiteral("Tethering"));
 
-const QString START_DATE(QStringLiteral("startDate"));
 const QString END_DATE(QStringLiteral("endDate"));
+const QString START_DATE(QStringLiteral("startDate"));
 
 } // namespace
 
@@ -82,17 +91,17 @@ QVariant getCalendarEvents(const QVariant& payload)
     storage->load(startDate, endDate);
     storage->loadRecurringIncidences();
 
-    KCalCore::Incidence::List incidences = calendar->incidences(startDate, endDate);
-    const mKCal::ExtendedCalendar::ExpandedIncidenceList incidenceList = calendar->expandRecurrences(&incidences, KDateTime(startDate), KDateTime(endDate));
+    KCalCore::Incidence::List incidences(calendar->incidences(startDate, endDate));
+    const mKCal::ExtendedCalendar::ExpandedIncidenceList incidenceList(calendar->expandRecurrences(&incidences, KDateTime(startDate), KDateTime(endDate)));
 
     QVariantList calendarEvents;
     for(const mKCal::ExtendedCalendar::ExpandedIncidence& expandedIncident : incidenceList) {
-        const mKCal::ExtendedCalendar::ExpandedIncidenceValidity& incidenceValidity = expandedIncident.first;
-        KCalCore::Incidence::Ptr incidence = expandedIncident.second;
+        const mKCal::ExtendedCalendar::ExpandedIncidenceValidity& incidenceValidity(expandedIncident.first);
+        const KCalCore::Incidence::Ptr incidence(expandedIncident.second);
 
         if(incidence->type() == KCalCore::IncidenceBase::TypeEvent) {
             const QString calendarUid(calendar->notebook(incidence));
-            mKCal::Notebook::Ptr notebook = storage->notebook(calendarUid);
+            const mKCal::Notebook::Ptr notebook(storage->notebook(calendarUid));
 
             if(!notebook || !notebook->isVisible() || !notebook->eventsAllowed()) {
                 continue;
@@ -120,13 +129,41 @@ QVariant getCalendarEvents(const QVariant& payload)
     return calendarEvents;
 }
 
+QVariant getContacts(const QVariant& /*payload*/)
+{
+    QVariantList contactList;
+
+    const QtContacts::QContactManager contactManager(CONTACT_MANAGER_NAME);
+    const QList<QtContacts::QContact> contacts(contactManager.contacts());
+
+    for(const auto& contact : contacts) {
+        QVariantList numbers;
+        const auto numberDetails(contact.details<QtContacts::QContactPhoneNumber>());
+        for(const auto& numberDetail : numberDetails) {
+            numbers.append(numberDetail.number());
+        }
+
+        const QVariantMap contactItem{
+            { QStringLiteral("id"), contact.id().toString() },
+            { QStringLiteral("name"), contact.detail<QtContacts::QContactDisplayLabel>().label() },
+            { QStringLiteral("numbers"), numbers }
+        };
+
+        contactList.append(contactItem);
+    }
+
+    return contactList;
+}
+
 QVariant getSupportedPermissions(const QVariant& /*payload*/)
 {
     return QVariantList{
         QStringLiteral("sonar.permission.BLUETOOTH_STATE"),
         QStringLiteral("sonar.permission.CALENDAR"),
+        QStringLiteral("sonar.permission.CONTACTS"),
         QStringLiteral("sonar.permission.FLIGHTMODE_STATE"),
         QStringLiteral("sonar.permission.MOBILE_NETWORK_STATE"),
+        QStringLiteral("sonar.permission.SEND_SMS"),
         QStringLiteral("sonar.permission.WIFI_STATE"),
         QStringLiteral("sonar.permission.WIFI_TETHERING")
     };
@@ -224,9 +261,27 @@ void setWifiTethering(const QVariant& payload)
                        QVariant::fromValue(QDBusVariant(payload)));
 }
 
+void commandSendSms(const QVariant& payload)
+{
+    const QVariantMap request(payload.toMap());
+    const QString message{request.value(QStringLiteral("message")).toString()};
+    const QString number{request.value(QStringLiteral("number")).toString()};
+
+    QDBusInterface dbusInterface(SERVICE_ORG_OFONO,
+                                 PATH_RIL_0,
+                                 INTERFACE_ORG_OFONO_MESSAGEMANAGER,
+                                 QDBusConnection::systemBus());
+
+    dbusInterface.call(METHOD_SENDMESSAGE,
+                       number,
+                       message);
+}
+
 void commandUninstall(const QVariant& /*payload*/)
 {
-    QProcess::startDetached(QStringLiteral("rpm"), QStringList{QStringLiteral("-e"), QStringLiteral("situations-sonar")});
+    QProcess::startDetached(QStringLiteral("rpm"),
+                            QStringList{QStringLiteral("-e"),
+                                        QStringLiteral("situations-sonar")});
 }
 
 } // namespace platform

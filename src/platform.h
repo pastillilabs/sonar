@@ -7,6 +7,7 @@ namespace platform {
 
 QVariant getCalendars(const QVariant& payload);
 QVariant getCalendarEvents(const QVariant& payload);
+QVariant getContacts(const QVariant& payload);
 QVariant getSupportedPermissions(const QVariant& payload);
 
 void registerCalendarChangeObserver(const QVariant& payload, QLocalSocket& client, Notifier notifier);
@@ -19,6 +20,7 @@ void setCellularRadioTechnology(const QVariant& payload);
 void setFlightmodeState(const QVariant& payload);
 void setWifiTethering(const QVariant& payload);
 
+void commandSendSms(const QVariant& payload);
 void commandUninstall(const QVariant& payload);
 
 } // namespace platform

@@ -1,7 +1,7 @@
 Name: situations-sonar
 Summary: Companion Daemon for Situations
-Version: 0.0.4
-Release: 4
+Version: 0.0.5
+Release: 5
 # The contents of the Group field should be one of the groups listed here:
 # http://gitorious.org/meego-developer-tools/spectacle/blobs/master/data/GROUPS
 Group: Qt/Qt
@@ -19,10 +19,11 @@ Builder: qmake5
 # This section specifies build dependencies that are resolved using pkgconfig.
 # This is the preferred way of specifying build dependencies for your package.
 PkgConfigBR:
+  - Qt5Contacts
   - Qt5Core
-  - libmkcal-qt5
-  - libkcalcoren-qt5
   - libical
+  - libkcalcoren-qt5
+  - libmkcal-qt5
 
 # Build dependencies without a pkgconfig setup can be listed here
 # PkgBR:
