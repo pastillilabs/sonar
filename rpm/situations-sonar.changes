@@ -1,3 +1,7 @@
+* Wed Oct 21 2020 Heikki Haveri <support@pastillilabs.com> 0.0.6
+- Some refactoring + use of jsonipc library
+- Initial (untested) support for 'defaultuser' instead of 'nemo'
+
 * Sat Dec 28 2019 Heikki Haveri <support@pastillilabs.com> 0.0.5
 - Added support for fetching contacts & sending SMS
 

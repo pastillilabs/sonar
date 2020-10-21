@@ -6,16 +6,24 @@
 Name:       situations-sonar
 
 # >> macros
+%define __provides_exclude_from ^%{_datadir}/.*$
+%define __requires_exclude ^libc|libgcc_s|libjsonipc.*$
 # << macros
 
+%{!?qtc_qmake:%define qtc_qmake %qmake}
+%{!?qtc_qmake5:%define qtc_qmake5 %qmake5}
+%{!?qtc_make:%define qtc_make make}
+%{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Companion Daemon for Situations
-Version:    0.0.5
-Release:    5
+Version:    0.0.6
+Release:    6
 Group:      Qt/Qt
 License:    Copyright (C) Pastilli Labs - All Rights Reserved
 URL:        http://www.pastillilabs.com
 Source0:    %{name}-%{version}.tar.bz2
 Source100:  situations-sonar.yaml
+Requires(post): /sbin/ldconfig
+Requires(postun): /sbin/ldconfig
 BuildRequires:  pkgconfig(Qt5Contacts)
 BuildRequires:  pkgconfig(Qt5Core)
 BuildRequires:  pkgconfig(libical)
@@ -36,9 +44,9 @@ Companion Daemon for Situations
 # >> build pre
 # << build pre
 
-%qmake5 
+%qtc_qmake5 
 
-make %{?_smp_mflags}
+%qtc_make %{?_smp_mflags}
 
 # >> build post
 # << build post
@@ -59,6 +67,7 @@ systemctl stop situations-sonar
 # << preun
 
 %post
+/sbin/ldconfig
 # >> post
 systemctl enable situations-sonar
 systemctl restart situations-sonar
@@ -66,14 +75,17 @@ systemctl daemon-reload
 # << post
 
 %postun
+/sbin/ldconfig
 # >> postun
 systemctl daemon-reload
 # << postun
 
 %files
 %defattr(-,root,root,-)
+%{_bindir}
 %{_bindir}/%{name}
+%{_datadir}/%{name}/lib/libjsonipc.so
 %{_libdir}/systemd/user/harbour-situations2application.service
-%{_sysconfdir}/systemd/system/situations-sonar.service
+%{_sysconfdir}/systemd/system/%{name}.service
 # >> files
 # << files

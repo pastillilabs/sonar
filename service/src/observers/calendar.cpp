@@ -1,13 +1,14 @@
 #include "calendar.h"
 
+#include <QJsonObject>
+#include <QJsonValue>
 #include <mkcal-qt5/extendedcalendar.h>
 #include <mkcal-qt5/extendedstorage.h>
 #include <mkcal-qt5/extendedstorageobserver.h>
 
 namespace {
 
-QHash<QLocalSocket*, sonar::Notifier> notifiers;
-QHash<QLocalSocket*, QMetaObject::Connection> connections;
+QHash<JsonClient*, QMetaObject::Connection> clients;
 
 /**
  * @brief The Calendar class
@@ -25,7 +26,7 @@ public:
         mStorage->registerObserver(this);
     }
 
-    ~Calendar()
+    ~Calendar() override
     {
         mStorage->unregisterObserver(this);
         mStorage->close();
@@ -35,12 +36,16 @@ public:
 public: // From mKCal::ExtendedStorageObserver
     void storageModified(mKCal::ExtendedStorage* /*storage*/, const QString& /*info*/) override
     {
-        // Call all notifiers
-        auto i = notifiers.begin();
-        while(i != notifiers.end()) {
-            const auto& notifier = i.value();
-            notifier(*i.key(), QVariant());
-            ++i;
+        const QJsonObject message{
+            { QLatin1String("method"), QLatin1String("notify") },
+            { QLatin1String("target"), QLatin1String("calendarChange") },
+            { QLatin1String("payload"), QJsonValue() }
+        };
+
+        // Call all registered clients
+        const auto constClients = clients.keys();
+        for(JsonClient* client : constClients) {
+            client->send(message);
         }
     }
 
@@ -65,30 +70,29 @@ namespace sonar {
 namespace observers {
 namespace calendar {
 
-void registerChangeObserver(const QVariant& /*payload*/, QLocalSocket& client, Notifier notifier)
+void registerChangeObserver(JsonClient& jsonClient, const QJsonValue& /*payload*/)
 {
-    if(notifiers.isEmpty()) {
+    if(clients.isEmpty()) {
         ::calendar.reset(new Calendar());
     }
 
-    if(!notifiers.contains(&client)) {
-        QMetaObject::Connection connection = QObject::connect(&client, &QLocalSocket::destroyed, [&client] {
-            unregisterChangeObserver(client);
+    if(!clients.contains(&jsonClient)) {
+        QMetaObject::Connection connection = QObject::connect(&jsonClient, &JsonClient::destroyed, [&jsonClient] {
+            unregisterChangeObserver(jsonClient);
         });
 
-        connections.insert(&client, connection);
-        notifiers.insert(&client, notifier);
+        clients.insert(&jsonClient, connection);
     }
 }
 
-void unregisterChangeObserver(QLocalSocket& client)
+void unregisterChangeObserver(JsonClient& jsonClient)
 {
-    if(notifiers.contains(&client)) {
-        QObject::disconnect(connections.take(&client));
-        notifiers.remove(&client);
+    if(clients.contains(&jsonClient)) {
+        QObject::disconnect(clients.take(&jsonClient));
+        clients.remove(&jsonClient);
     }
 
-    if(notifiers.isEmpty()) {
+    if(clients.isEmpty()) {
         ::calendar.reset();
     }
 }

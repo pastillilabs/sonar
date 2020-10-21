@@ -2,6 +2,8 @@
 #include "observers/calendar.h"
 
 #include <QDebug>
+#include <QJsonArray>
+#include <QJsonObject>
 #include <QProcess>
 #include <QtContacts/QContact>
 #include <QtContacts/QContactDetail>
@@ -11,7 +13,6 @@
 #include <QtDBus/QDBusConnection>
 #include <QtDBus/QDBusInterface>
 #include <QtDBus/QDBusReply>
-
 #include <mkcal-qt5/extendedcalendar.h>
 #include <mkcal-qt5/extendedstorage.h>
 #include <mkcal-qt5/extendedstorageobserver.h>
@@ -57,16 +58,16 @@ const QString START_DATE(QStringLiteral("startDate"));
 namespace sonar {
 namespace platform {
 
-QVariant getCalendars(const QVariant& /*payload*/)
+QJsonValue getCalendars(const QJsonValue& /*payload*/)
 {
     mKCal::ExtendedCalendar::Ptr calendar(new mKCal::ExtendedCalendar(KDateTime::Spec::LocalZone()));
     mKCal::ExtendedStorage::Ptr storage(mKCal::ExtendedCalendar::defaultStorage(calendar));
     storage->open();
 
-    QVariantList calendars;
+    QJsonArray calendars;
     const mKCal::Notebook::List notebooks = storage->notebooks();
     for(const mKCal::Notebook::Ptr& notebook : notebooks) {
-        const QVariantMap calendar{
+        const QJsonObject calendar{
             { QStringLiteral("name"), notebook->name() },
             { QStringLiteral("uid"), notebook->uid() }
         };
@@ -79,11 +80,11 @@ QVariant getCalendars(const QVariant& /*payload*/)
     return calendars;
 }
 
-QVariant getCalendarEvents(const QVariant& payload)
+QJsonValue getCalendarEvents(const QJsonValue& payload)
 {
-    const QVariantMap request(payload.toMap());
-    const QDate startDate(QDate::fromString(request.value(START_DATE, QDate::currentDate().addDays(-1)).toString(), Qt::ISODate));
-    const QDate endDate(QDate::fromString(request.value(END_DATE, QDate::currentDate().addDays(1)).toString(), Qt::ISODate));
+    const QJsonObject request(payload.toObject());
+    const QDate startDate(QDate::fromString(request.value(START_DATE).toString(QDate::currentDate().addDays(-1).toString(Qt::ISODate)), Qt::ISODate));
+    const QDate endDate(QDate::fromString(request.value(END_DATE).toString(QDate::currentDate().addDays(1).toString(Qt::ISODate)), Qt::ISODate));
 
     mKCal::ExtendedCalendar::Ptr calendar(new mKCal::ExtendedCalendar(KDateTime::Spec::LocalZone()));
     mKCal::ExtendedStorage::Ptr storage(mKCal::ExtendedCalendar::defaultStorage(calendar));
@@ -94,7 +95,7 @@ QVariant getCalendarEvents(const QVariant& payload)
     KCalCore::Incidence::List incidences(calendar->incidences(startDate, endDate));
     const mKCal::ExtendedCalendar::ExpandedIncidenceList incidenceList(calendar->expandRecurrences(&incidences, KDateTime(startDate), KDateTime(endDate)));
 
-    QVariantList calendarEvents;
+    QJsonArray calendarEvents;
     for(const mKCal::ExtendedCalendar::ExpandedIncidence& expandedIncident : incidenceList) {
         const mKCal::ExtendedCalendar::ExpandedIncidenceValidity& incidenceValidity(expandedIncident.first);
         const KCalCore::Incidence::Ptr incidence(expandedIncident.second);
@@ -107,7 +108,7 @@ QVariant getCalendarEvents(const QVariant& payload)
                 continue;
             }
 
-            const QVariantMap event{
+            const QJsonObject event{
                 { QStringLiteral("calendarId"), calendarUid },
                 { QStringLiteral("begin"), QString::number(incidenceValidity.dtStart.toMSecsSinceEpoch()) },
                 { QStringLiteral("end"), QString::number(incidenceValidity.dtEnd.toMSecsSinceEpoch()) },
@@ -129,21 +130,21 @@ QVariant getCalendarEvents(const QVariant& payload)
     return calendarEvents;
 }
 
-QVariant getContacts(const QVariant& /*payload*/)
+QJsonValue getContacts(const QJsonValue& /*payload*/)
 {
-    QVariantList contactList;
+    QJsonArray contactList;
 
     const QtContacts::QContactManager contactManager(CONTACT_MANAGER_NAME);
     const QList<QtContacts::QContact> contacts(contactManager.contacts());
 
     for(const auto& contact : contacts) {
-        QVariantList numbers;
+        QJsonArray numbers;
         const auto numberDetails(contact.details<QtContacts::QContactPhoneNumber>());
         for(const auto& numberDetail : numberDetails) {
             numbers.append(numberDetail.number());
         }
 
-        const QVariantMap contactItem{
+        const QJsonObject contactItem{
             { QStringLiteral("id"), contact.id().toString() },
             { QStringLiteral("name"), contact.detail<QtContacts::QContactDisplayLabel>().label() },
             { QStringLiteral("numbers"), numbers }
@@ -155,9 +156,9 @@ QVariant getContacts(const QVariant& /*payload*/)
     return contactList;
 }
 
-QVariant getSupportedPermissions(const QVariant& /*payload*/)
+QJsonValue getSupportedPermissions(const QJsonValue& /*payload*/)
 {
-    return QVariantList{
+    return QJsonArray{
         QStringLiteral("sonar.permission.BLUETOOTH_STATE"),
         QStringLiteral("sonar.permission.CALENDAR"),
         QStringLiteral("sonar.permission.CONTACTS"),
@@ -169,17 +170,17 @@ QVariant getSupportedPermissions(const QVariant& /*payload*/)
     };
 }
 
-void registerCalendarChangeObserver(const QVariant& payload, QLocalSocket& client, Notifier notifier)
+void registerCalendarChangeObserver(JsonClient& jsonClient, const QJsonValue& payload)
 {
-    observers::calendar::registerChangeObserver(payload, client, notifier);
+    observers::calendar::registerChangeObserver(jsonClient, payload);
 }
 
-void unregisterCalendarChangeObserver(QLocalSocket& client)
+void unregisterCalendarChangeObserver(JsonClient& jsonClient)
 {
-    observers::calendar::unregisterChangeObserver(client);
+    observers::calendar::unregisterChangeObserver(jsonClient);
 }
 
-void setBluetoothState(const QVariant& payload)
+void setBluetoothState(const QJsonValue& payload)
 {
     // TODO: Any better way to know which interface to use??
     QDBusInterface dbusInterface(SERVICE_ORG_BLUEZ,
@@ -193,7 +194,7 @@ void setBluetoothState(const QVariant& payload)
         dbusInterface.call(METHOD_SET,
                            ARG_ORG_BLUEZ_ADAPTER1,
                            ARG_POWERED,
-                           QVariant::fromValue(QDBusVariant(payload)));
+                           QVariant::fromValue(QDBusVariant(payload.toVariant())));
     }
     else {
         QDBusInterface dbusInterfaceOld(SERVICE_NET_CONNMAN,
@@ -202,11 +203,11 @@ void setBluetoothState(const QVariant& payload)
                                         QDBusConnection::systemBus());
         dbusInterfaceOld.call(METHOD_SETPROPERTY,
                               ARG_POWERED,
-                              QVariant::fromValue(QDBusVariant(payload)));
+                              QVariant::fromValue(QDBusVariant(payload.toVariant())));
     }
 }
 
-void setWifiState(const QVariant& payload)
+void setWifiState(const QJsonValue& payload)
 {
     QDBusInterface dbusInterface(SERVICE_NET_CONNMAN,
                                  PATH_NET_CONNMAN_TECHNOLOGY_WIFI,
@@ -214,10 +215,10 @@ void setWifiState(const QVariant& payload)
                                  QDBusConnection::systemBus());
     dbusInterface.call(METHOD_SETPROPERTY,
                        ARG_POWERED,
-                       QVariant::fromValue(QDBusVariant(payload)));
+                       QVariant::fromValue(QDBusVariant(payload.toVariant())));
 }
 
-void setCellularState(const QVariant& payload)
+void setCellularState(const QJsonValue& payload)
 {
     QDBusInterface dbusInterface(SERVICE_NET_CONNMAN,
                                  PATH_NET_CONNMAN_TECHNOLOGY_CELLULAR,
@@ -225,10 +226,10 @@ void setCellularState(const QVariant& payload)
                                  QDBusConnection::systemBus());
     dbusInterface.call(METHOD_SETPROPERTY,
                        ARG_POWERED,
-                       QVariant::fromValue(QDBusVariant(payload)));
+                       QVariant::fromValue(QDBusVariant(payload.toVariant())));
 }
 
-void setCellularRadioTechnology(const QVariant& payload)
+void setCellularRadioTechnology(const QJsonValue& payload)
 {
     QDBusInterface dbusInterface(SERVICE_ORG_OFONO,
                                  PATH_RIL_0,
@@ -236,10 +237,10 @@ void setCellularRadioTechnology(const QVariant& payload)
                                  QDBusConnection::systemBus());
     dbusInterface.call(METHOD_SETPROPERTY,
                        ARG_TECHNOLOGYPREFERENCE,
-                       QVariant::fromValue(QDBusVariant(payload)));
+                       QVariant::fromValue(QDBusVariant(payload.toVariant())));
 }
 
-void setFlightmodeState(const QVariant& payload)
+void setFlightmodeState(const QJsonValue& payload)
 {
     QDBusInterface dbusInterface(SERVICE_COM_NOKIA_MCE,
                                  PATH_COM_NOKIA_MCE_REQUEST,
@@ -250,7 +251,7 @@ void setFlightmodeState(const QVariant& payload)
                        static_cast<quint32>(1));
 }
 
-void setWifiTethering(const QVariant& payload)
+void setWifiTethering(const QJsonValue& payload)
 {
     QDBusInterface dbusInterface(SERVICE_NET_CONNMAN,
                                  PATH_NET_CONNMAN_TECHNOLOGY_WIFI,
@@ -258,12 +259,12 @@ void setWifiTethering(const QVariant& payload)
                                  QDBusConnection::systemBus());
     dbusInterface.call(METHOD_SETPROPERTY,
                        ARG_TETHERING,
-                       QVariant::fromValue(QDBusVariant(payload)));
+                       QVariant::fromValue(QDBusVariant(payload.toVariant())));
 }
 
-void commandSendSms(const QVariant& payload)
+void commandSendSms(const QJsonValue& payload)
 {
-    const QVariantMap request(payload.toMap());
+    const QJsonObject request(payload.toObject());
     const QString message{request.value(QStringLiteral("message")).toString()};
     const QString number{request.value(QStringLiteral("number")).toString()};
 
@@ -277,7 +278,7 @@ void commandSendSms(const QVariant& payload)
                        message);
 }
 
-void commandUninstall(const QVariant& /*payload*/)
+void commandUninstall(const QJsonValue& /*payload*/)
 {
     QProcess::startDetached(QStringLiteral("rpm"),
                             QStringList{QStringLiteral("-e"),

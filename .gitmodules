@@ -1,0 +1,3 @@
+[submodule "jsonipc"]
+	path = jsonipc
+	url = https://github.com/pastillilabs/jsonipc.git
