@@ -1,3 +1,6 @@
+* Sun Feb 28 2021 Heikki Haveri <support@pastillilabs.com> 0.0.7
+- Fix includes against Salifish SDK 4.x
+
 * Wed Oct 21 2020 Heikki Haveri <support@pastillilabs.com> 0.0.6
 - Some refactoring + use of jsonipc library
 - Initial (untested) support for 'defaultuser' instead of 'nemo'

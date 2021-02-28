@@ -46,6 +46,8 @@ DISTFILES += \
 
 LIBS += -L$$OUT_PWD/../jsonipc -ljsonipc
 
+SONAR_HOST_ARCH = $${QMAKE_HOST.arch}
+
 target.path = /usr/bin
 INSTALLS += target
 
@@ -54,6 +56,13 @@ situations-sonar-service.path = /etc/systemd/system
 INSTALLS += situations-sonar-service
 
 situations-service.files = harbour-situations2application.service
-situations-service.path = /usr/lib/systemd/user
+equals(SONAR_HOST_ARCH, "armv7l") {
+    situations-service.path = /usr/lib/systemd/user
+}
+equals(SONAR_HOST_ARCH, "aarch64") {
+    situations-service.path = /usr/lib64/systemd/user
+}
+equals(SONAR_HOST_ARCH, "i486") {
+    situations-service.path = /usr/lib/systemd/user
+}
 INSTALLS += situations-service
-
