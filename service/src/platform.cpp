@@ -7,6 +7,7 @@
 #include <QProcess>
 #include <QtContacts/QContact>
 #include <QtContacts/QContactDetail>
+#include <QtContacts/QContactDisplayLabel>
 #include <QtContacts/QContactManager>
 #include <QtContacts/QContactName>
 #include <QtContacts/QContactPhoneNumber>
