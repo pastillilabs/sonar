@@ -1,7 +1,7 @@
 Name: situations-sonar
 Summary: Companion Daemon for Situations
-Version: 0.0.7
-Release: 7
+Version: 0.0.8
+Release: 8
 # The contents of the Group field should be one of the groups listed here:
 # http://gitorious.org/meego-developer-tools/spectacle/blobs/master/data/GROUPS
 Group: Qt/Qt
@@ -36,7 +36,7 @@ Files:
   - '%{_bindir}'
   - '%{_bindir}/%{name}'
   - '%{_datadir}/%{name}/lib/libjsonipc.so'
-  - '%{_libdir}/systemd/user/harbour-situations2application.service'
+  - '%{_userunitdir}/harbour-situations2application.service'
   - '%{_sysconfdir}/systemd/system/%{name}.service'
 
 # For more information about yaml and what's supported in Sailfish OS

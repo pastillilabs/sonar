@@ -15,8 +15,8 @@ Name:       situations-sonar
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Companion Daemon for Situations
-Version:    0.0.7
-Release:    7
+Version:    0.0.8
+Release:    8
 Group:      Qt/Qt
 License:    Copyright (C) Pastilli Labs - All Rights Reserved
 URL:        http://www.pastillilabs.com
@@ -85,7 +85,7 @@ systemctl daemon-reload
 %{_bindir}
 %{_bindir}/%{name}
 %{_datadir}/%{name}/lib/libjsonipc.so
-%{_libdir}/systemd/user/harbour-situations2application.service
+%{_userunitdir}/harbour-situations2application.service
 %{_sysconfdir}/systemd/system/%{name}.service
 # >> files
 # << files
