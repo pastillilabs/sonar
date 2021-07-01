@@ -1,7 +1,7 @@
 Name: situations-sonar
 Summary: Companion Daemon for Situations
-Version: 0.0.8
-Release: 8
+Version: 0.0.9
+Release: 9
 # The contents of the Group field should be one of the groups listed here:
 # http://gitorious.org/meego-developer-tools/spectacle/blobs/master/data/GROUPS
 Group: Qt/Qt
@@ -23,8 +23,8 @@ Builder: qtc5
 PkgConfigBR:
   - Qt5Contacts
   - Qt5Core
+  - KF5CalendarCore
   - libical
-  - libkcalcoren-qt5
   - libmkcal-qt5
 
 # Build dependencies without a pkgconfig setup can be listed here

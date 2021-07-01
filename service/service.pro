@@ -9,8 +9,8 @@ CONFIG += c++11
 CONFIG += console
 CONFIG += link_pkgconfig
 
+PKGCONFIG += KF5CalendarCore
 PKGCONFIG += libical
-PKGCONFIG += libkcalcoren-qt5
 PKGCONFIG += libmkcal-qt5
 PKGCONFIG += Qt5Contacts
 

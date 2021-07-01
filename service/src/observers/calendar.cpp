@@ -2,6 +2,7 @@
 
 #include <QJsonObject>
 #include <QJsonValue>
+#include <QTimeZone>
 #include <mkcal-qt5/extendedcalendar.h>
 #include <mkcal-qt5/extendedstorage.h>
 #include <mkcal-qt5/extendedstorageobserver.h>
@@ -19,7 +20,7 @@ class Calendar final
 
 public:
     Calendar()
-        : mCalendar(new mKCal::ExtendedCalendar(KDateTime::Spec::LocalZone()))
+        : mCalendar(new mKCal::ExtendedCalendar(QTimeZone::systemTimeZone()))
         , mStorage(mKCal::ExtendedCalendar::defaultStorage(mCalendar))
     {
         mStorage->open();

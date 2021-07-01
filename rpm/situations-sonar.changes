@@ -1,3 +1,6 @@
+* Thu Jul 1 2021 Heikki Haveri <support@pastillilabs.com> 0.0.9
+- Update calendar dependency for latest SFOS
+
 * Sun May 30 2021 Heikki Haveri <support@pastillilabs.com> 0.0.8
 - Fix Situations autostart on aarch64
 

@@ -5,6 +5,7 @@
 #include <QJsonArray>
 #include <QJsonObject>
 #include <QProcess>
+#include <QTimeZone>
 #include <QtContacts/QContact>
 #include <QtContacts/QContactDetail>
 #include <QtContacts/QContactDisplayLabel>
@@ -61,7 +62,7 @@ namespace platform {
 
 QJsonValue getCalendars(const QJsonValue& /*payload*/)
 {
-    mKCal::ExtendedCalendar::Ptr calendar(new mKCal::ExtendedCalendar(KDateTime::Spec::LocalZone()));
+    mKCal::ExtendedCalendar::Ptr calendar(new mKCal::ExtendedCalendar(QTimeZone::systemTimeZone()));
     mKCal::ExtendedStorage::Ptr storage(mKCal::ExtendedCalendar::defaultStorage(calendar));
     storage->open();
 
@@ -87,21 +88,21 @@ QJsonValue getCalendarEvents(const QJsonValue& payload)
     const QDate startDate(QDate::fromString(request.value(START_DATE).toString(QDate::currentDate().addDays(-1).toString(Qt::ISODate)), Qt::ISODate));
     const QDate endDate(QDate::fromString(request.value(END_DATE).toString(QDate::currentDate().addDays(1).toString(Qt::ISODate)), Qt::ISODate));
 
-    mKCal::ExtendedCalendar::Ptr calendar(new mKCal::ExtendedCalendar(KDateTime::Spec::LocalZone()));
+    mKCal::ExtendedCalendar::Ptr calendar(new mKCal::ExtendedCalendar(QTimeZone::systemTimeZone()));
     mKCal::ExtendedStorage::Ptr storage(mKCal::ExtendedCalendar::defaultStorage(calendar));
     storage->open();
     storage->load(startDate, endDate);
     storage->loadRecurringIncidences();
 
-    KCalCore::Incidence::List incidences(calendar->incidences(startDate, endDate));
-    const mKCal::ExtendedCalendar::ExpandedIncidenceList incidenceList(calendar->expandRecurrences(&incidences, KDateTime(startDate), KDateTime(endDate)));
+    KCalendarCore::Incidence::List incidences(calendar->incidences(startDate, endDate));
+    const mKCal::ExtendedCalendar::ExpandedIncidenceList incidenceList(calendar->expandRecurrences(&incidences, QDateTime(startDate), QDateTime(endDate)));
 
     QJsonArray calendarEvents;
     for(const mKCal::ExtendedCalendar::ExpandedIncidence& expandedIncident : incidenceList) {
         const mKCal::ExtendedCalendar::ExpandedIncidenceValidity& incidenceValidity(expandedIncident.first);
-        const KCalCore::Incidence::Ptr incidence(expandedIncident.second);
+        const KCalendarCore::Incidence::Ptr incidence(expandedIncident.second);
 
-        if(incidence->type() == KCalCore::IncidenceBase::TypeEvent) {
+        if(incidence->type() == KCalendarCore::IncidenceBase::TypeEvent) {
             const QString calendarUid(calendar->notebook(incidence));
             const mKCal::Notebook::Ptr notebook(storage->notebook(calendarUid));
 
