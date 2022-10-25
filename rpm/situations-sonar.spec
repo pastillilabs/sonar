@@ -24,9 +24,10 @@ Source0:    %{name}-%{version}.tar.bz2
 Source100:  situations-sonar.yaml
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
-BuildRequires:  pkgconfig(Qt5Network)
 BuildRequires:  pkgconfig(Qt5Contacts)
 BuildRequires:  pkgconfig(Qt5Core)
+BuildRequires:  pkgconfig(Qt5DBus)
+BuildRequires:  pkgconfig(Qt5Network)
 BuildRequires:  pkgconfig(KF5CalendarCore)
 BuildRequires:  pkgconfig(libical)
 BuildRequires:  pkgconfig(libmkcal-qt5)
