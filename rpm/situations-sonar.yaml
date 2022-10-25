@@ -18,6 +18,9 @@ Configure: none
 # control over qmake/make execution
 Builder: qtc5
 
+Macros:
+  - '__provides_exclude_from;^%{_datadir}/.*$'
+  - '__requires_exclude;^libc|libgcc_s|libjsonipc.*$'
 # This section specifies build dependencies that are resolved using pkgconfig.
 # This is the preferred way of specifying build dependencies for your package.
 PkgConfigBR:
