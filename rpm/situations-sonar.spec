@@ -15,8 +15,8 @@ Name:       situations-sonar
 %{!?qtc_make:%define qtc_make make}
 %{?qtc_builddir:%define _builddir %qtc_builddir}
 Summary:    Companion Daemon for Situations
-Version:    0.0.9
-Release:    9
+Version:    0.0.10
+Release:    10
 Group:      Qt/Qt
 License:    Copyright (C) Pastilli Labs - All Rights Reserved
 URL:        http://www.pastillilabs.com

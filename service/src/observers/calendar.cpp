@@ -50,14 +50,6 @@ public: // From mKCal::ExtendedStorageObserver
         }
     }
 
-    void storageProgress(mKCal::ExtendedStorage* /*storage*/, const QString& /*info*/) override
-    {
-    }
-
-    void storageFinished(mKCal::ExtendedStorage* /*storage*/, bool /*error*/, const QString& /*info*/) override
-    {
-    }
-
 private:
     mKCal::ExtendedCalendar::Ptr mCalendar;
     mKCal::ExtendedStorage::Ptr mStorage;

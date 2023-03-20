@@ -1,3 +1,6 @@
+* Fri Mar 20 2023 Heikki Haveri <support@pastillilabs.com> 0.0.10
+- Build against latest SFOS
+
 * Thu Jul 1 2021 Heikki Haveri <support@pastillilabs.com> 0.0.9
 - Update calendar dependency for latest SFOS
 
