@@ -11,15 +11,11 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    // Currently Sonar works only for nemo / defaultuser
     const QVersionNumber productVersion{QVersionNumber::fromString(QSysInfo::productVersion())};
-    if(productVersion > QVersionNumber(3, 4) && QDir(QStringLiteral("/home/defaultuser")).exists()) {
-        setenv("HOME", "/home/defaultuser", 1);
-        setenv("USER", "defaultuser", 1);
-    }
-    else {
-        setenv("HOME", "/home/nemo", 1);
-        setenv("USER", "nemo", 1);
+    const QVersionNumber checkVersion = QVersionNumber(3, 4);
+    if(productVersion > checkVersion) {
+        setenv("HOME", QDir::homePath().toLocal8Bit().constData(), 1);            // homePath() returns absolute path
+        setenv("USER", QDir::home().dirName().toLocal8Bit().constData(), 1);      // home.dirName() returns last path segment
     }
 
     int result(1);
